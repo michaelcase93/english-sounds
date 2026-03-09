@@ -28,7 +28,7 @@ export default function Browse() {
     : GROUPS.filter(g => g.id === activeTab)
 
   return (
-    <div className="flex flex-col bg-white min-h-screen">
+    <div className="flex flex-col bg-white" style={{ height: '100dvh' }}>
 
       {/* ── Page title + rules toggle ── */}
       <div className="flex-shrink-0 px-4 pt-12 pb-2 bg-white flex items-center justify-between">
@@ -46,7 +46,7 @@ export default function Browse() {
       </div>
 
       {/* ── Tab bar (scrollable so all 4 fit on small screens) ── */}
-      <div className="flex-shrink-0 flex overflow-x-auto border-b border-slate-200 bg-white px-2 scrollbar-none">
+      <div className="flex-shrink-0 flex overflow-x-auto border-b border-slate-200 bg-white px-2 scrollbar-none" style={{ touchAction: 'pan-x' }}>
         {TABS.map(tab => (
           <button
             key={tab.id}
@@ -65,8 +65,7 @@ export default function Browse() {
       </div>
 
       {/* ── Content ── */}
-      {/* overflow-y-scroll keeps scrollbar gutter stable so card size never changes between tabs */}
-      <div className="overflow-y-auto px-4 py-4" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
+      <div className="flex-1 overflow-y-auto px-4 py-4" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
 
         {visibleGroups.map((group, i) => {
           const phonograms = PHONOGRAMS.filter(p => p.group === group.id)
