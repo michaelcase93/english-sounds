@@ -7,8 +7,7 @@ const COLORS = {
   green:  { base: '#388E3C', active: '#1B5E20' }, // group1 vowels
   blue:   { base: '#1565C0', active: '#0D47A1' }, // group2
   purple: { base: '#6A1B9A', active: '#4A148C' }, // group3
-  teal:   { base: '#00695C', active: '#004D40' }, // group4
-  orange: { base: '#E65100', active: '#BF360C' }, // group5
+  orange: { base: '#E65100', active: '#BF360C' }, // group4
 }
 
 // Vowels in the alphabet get green; y gets a diagonal split
@@ -18,8 +17,7 @@ const GROUP_COLOR = {
   group1: 'red',
   group2: 'blue',
   group3: 'purple',
-  group4: 'teal',
-  group5: 'orange',
+  group4: 'orange',
 }
 
 function getBackground(phonogram, pressed) {
