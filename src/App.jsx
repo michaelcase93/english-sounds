@@ -23,7 +23,7 @@ export default function App() {
 
 function StudentLayout() {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-hidden">
         <Routes>
           <Route path="/" element={<Navigate to="/browse" replace />} />
