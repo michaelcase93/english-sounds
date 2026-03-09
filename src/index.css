@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    /* Respect safe areas on notched phones */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans;
+    overscroll-behavior: none;
+  }
+
+  /* Prevent pull-to-refresh on iOS */
+  #root {
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@layer components {
+  .page-scroll {
+    @apply flex-1 overflow-y-auto;
+    /* Extra bottom padding so content isn't hidden behind the nav bar */
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  .card-base {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-100 select-none cursor-pointer;
+    touch-action: manipulation;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+
+  .card-base:active {
+    @apply shadow-md;
+    transform: scale(0.96);
+  }
+
+  .btn-primary {
+    @apply bg-brand-600 text-white font-semibold rounded-xl px-6 py-3 text-base;
+    @apply active:scale-95 transition-transform;
+    touch-action: manipulation;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-100 text-slate-700 font-semibold rounded-xl px-6 py-3 text-base;
+    @apply active:scale-95 transition-transform;
+    touch-action: manipulation;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+}
+
+/* WaveSurfer waveform container in admin tool */
+#waveform {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+/* Thin scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}

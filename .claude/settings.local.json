@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install 2>&1)",
+      "Bash(npm run build 2>&1)",
+      "Bash(git init && git add . && git commit -m \"Initial commit — English Sounds phonogram PWA\")"
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Generate PWA Icons</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f1f5f9; }
+    canvas { border-radius: 22%; display: block; margin: 1rem auto; box-shadow: 0 4px 24px rgba(0,0,0,0.15); }
+    button { display: block; margin: 0.5rem auto; padding: 0.6rem 1.6rem; font-size: 1rem;
+             background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #4338ca; }
+    p { text-align: center; color: #64748b; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <p>Preview (512×512) — click Download to save each file</p>
+  <canvas id="c" width="512" height="512"></canvas>
+  <button onclick="download(512, 'icon-512.png')">Download icon-512.png</button>
+  <button onclick="download(192, 'icon-192.png')">Download icon-192.png</button>
+
+  <script>
+    function draw(canvas) {
+      const s = canvas.width
+      const ctx = canvas.getContext('2d')
+      const r = s / 2
+
+      // Background — indigo gradient
+      const bg = ctx.createLinearGradient(0, 0, s, s)
+      bg.addColorStop(0, '#4f46e5')
+      bg.addColorStop(1, '#312e81')
+      ctx.fillStyle = bg
+      ctx.beginPath()
+      ctx.roundRect(0, 0, s, s, s * 0.22)
+      ctx.fill()
+
+      // Sound wave bars — 5 bars, centered
+      const bars    = [0.35, 0.6, 1.0, 0.6, 0.35]
+      const barW    = s * 0.07
+      const gap     = s * 0.05
+      const totalW  = bars.length * barW + (bars.length - 1) * gap
+      const startX  = (s - totalW) / 2
+      const centerY = s * 0.46
+
+      bars.forEach((h, i) => {
+        const barH  = s * 0.36 * h
+        const x     = startX + i * (barW + gap)
+        const y     = centerY - barH / 2
+        const rad   = barW / 2
+
+        ctx.fillStyle = 'rgba(255,255,255,0.92)'
+        ctx.beginPath()
+        ctx.roundRect(x, y, barW, barH, rad)
+        ctx.fill()
+      })
+
+      // "English Sounds" text below bars
+      const fontSize = s * 0.085
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      ctx.font = `600 ${fontSize}px system-ui, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('English Sounds', r, s * 0.76)
+    }
+
+    // Draw preview
+    const preview = document.getElementById('c')
+    draw(preview)
+
+    function download(size, filename) {
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      draw(canvas)
+      const a = document.createElement('a')
+      a.download = filename
+      a.href = canvas.toDataURL('image/png')
+      a.click()
+    }
+  </script>
+</body>
+</html>
