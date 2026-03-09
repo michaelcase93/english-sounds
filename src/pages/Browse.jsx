@@ -28,7 +28,7 @@ export default function Browse() {
     : GROUPS.filter(g => g.id === activeTab)
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="flex flex-col bg-white min-h-screen">
 
       {/* ── Page title + rules toggle ── */}
       <div className="flex-shrink-0 px-4 pt-12 pb-2 bg-white flex items-center justify-between">
@@ -66,7 +66,7 @@ export default function Browse() {
 
       {/* ── Content ── */}
       {/* overflow-y-scroll keeps scrollbar gutter stable so card size never changes between tabs */}
-      <div className="flex-1 overflow-y-scroll px-4 py-4 pb-6">
+      <div className="overflow-y-auto px-4 py-4" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
 
         {visibleGroups.map((group, i) => {
           const phonograms = PHONOGRAMS.filter(p => p.group === group.id)

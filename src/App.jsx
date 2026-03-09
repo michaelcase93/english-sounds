@@ -23,16 +23,14 @@ export default function App() {
 
 function StudentLayout() {
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 overflow-hidden">
-        <Routes>
-          <Route path="/" element={<Navigate to="/browse" replace />} />
-          <Route path="/browse" element={<Browse />} />
-          <Route path="/quiz" element={<Quiz />} />
-          <Route path="/progress" element={<Progress />} />
-        </Routes>
-      </div>
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="/browse" replace />} />
+        <Route path="/browse" element={<Browse />} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/progress" element={<Progress />} />
+      </Routes>
       <BottomNav />
-    </div>
+    </>
   )
 }

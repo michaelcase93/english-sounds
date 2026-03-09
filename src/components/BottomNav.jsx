@@ -39,7 +39,7 @@ const tabs = [
 export default function BottomNav() {
   return (
     <nav
-      className="flex-shrink-0 bg-white border-t border-slate-200"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-10"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex">
