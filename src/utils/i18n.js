@@ -57,7 +57,7 @@ const TRANSLATIONS = {
     section_learning: 'Still Learning',
     section_not_started: 'Not Started Yet',
     empty_state: 'No practice sessions yet',
-    empty_state_sub: 'Go to Browse or Quiz to get started',
+    empty_state_sub: 'Go to Sounds or Quiz to get started',
     reset_all: 'Reset All Progress',
     reset_confirm: 'This will erase all your progress. Are you sure?',
     reset_yes: 'Yes, Reset',
