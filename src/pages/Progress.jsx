@@ -174,6 +174,7 @@ function PhonogramPip({ phonogram, color }) {
 }
 
 function PracticingRow({ phonogram, entry }) {
+  const { t } = useLanguage()
   const pct = Math.round((entry.correct / entry.attempts) * 100)
   return (
     <div className="bg-white rounded-xl border border-slate-100 px-4 py-3 flex items-center gap-3">
@@ -182,7 +183,7 @@ function PracticingRow({ phonogram, entry }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between text-xs text-slate-500 mb-1">
-          <span>{entry.correct}/{entry.attempts} correct</span>
+          <span>{entry.correct}/{entry.attempts} {t('correct_label')}</span>
           <span className="font-medium">{pct}%</span>
         </div>
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">

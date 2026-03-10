@@ -64,6 +64,7 @@ const TRANSLATIONS = {
     cancel: 'Cancel',
     learning_label: 'Learning',
     not_yet_label: 'Not Yet',
+    correct_label: 'correct',
   },
 
   es: {
@@ -124,6 +125,7 @@ const TRANSLATIONS = {
     cancel: 'Cancelar',
     learning_label: 'Aprendiendo',
     not_yet_label: 'Sin Empezar',
+    correct_label: 'correcto',
   },
 }
 
