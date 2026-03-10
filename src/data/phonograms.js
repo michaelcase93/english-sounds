@@ -12,7 +12,7 @@ export const GROUPS = [
   { id: 'group1', label: 'Alphabet', range: 'A–Z' },
   { id: 'group2', label: 'Common Sounds', range: '27–45' },
   { id: 'group3', label: 'Advanced Sounds', range: '46–58' },
-  { id: 'group4', label: 'Final Core Sounds', range: '59–70' },
+  { id: 'group4', label: 'Additional Sounds', range: '59–70' },
 ]
 
 export const PHONOGRAMS = [

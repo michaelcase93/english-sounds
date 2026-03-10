@@ -1,8 +1,8 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { PHONOGRAMS } from '../data/phonograms'
 import { useProgress } from '../hooks/useProgress'
 import { isMastered, getRulesMode } from '../utils/storage'
-import { playAudio } from '../utils/audioPlayer'
+import { playAudio, stopCurrent } from '../utils/audioPlayer'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -21,6 +21,43 @@ const S = {
   DONE:      'done',
 }
 
+function playGotItSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(523, ctx.currentTime)
+    osc.frequency.setValueAtTime(659, ctx.currentTime + 0.08)
+    gain.gain.setValueAtTime(0.25, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.3)
+  } catch (e) {}
+}
+
+function playCelebrationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const notes = [523, 659, 784, 1047] // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      const t = ctx.currentTime + i * 0.12
+      gain.gain.setValueAtTime(0.25, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25)
+      osc.start(t)
+      osc.stop(t + 0.3)
+    })
+  } catch (e) {}
+}
+
 export default function Quiz() {
   const { progress, markResult, stats } = useProgress()
   const [phase, setPhase] = useState(S.IDLE)
@@ -28,8 +65,9 @@ export default function Quiz() {
   const [index, setIndex] = useState(0)
   const [sessionResults, setSessionResults] = useState({ correct: 0, incorrect: 0 })
   const [playing, setPlaying] = useState(false)
+  const [streak, setStreak] = useState(0)
+  const [showCelebration, setShowCelebration] = useState(false)
 
-  // Prioritize unmastered phonograms, shuffle
   const buildQueue = useCallback((mode) => {
     let pool
     if (mode === 'all') {
@@ -54,7 +92,15 @@ export default function Quiz() {
     setQueue(q)
     setIndex(0)
     setSessionResults({ correct: 0, incorrect: 0 })
+    setStreak(0)
+    setPlaying(false)
     setPhase(S.QUESTION)
+  }
+
+  function goToMenu() {
+    stopCurrent()
+    setPlaying(false)
+    setPhase(S.IDLE)
   }
 
   function handlePlayAudio() {
@@ -78,11 +124,26 @@ export default function Quiz() {
   }
 
   function handleResult(wasCorrect) {
+    stopCurrent()
+    setPlaying(false)
+
     markResult(currentPhonogram.id, wasCorrect)
     setSessionResults(prev => ({
       correct: prev.correct + (wasCorrect ? 1 : 0),
       incorrect: prev.incorrect + (wasCorrect ? 0 : 1),
     }))
+
+    const newStreak = wasCorrect ? streak + 1 : 0
+    setStreak(newStreak)
+
+    if (wasCorrect) {
+      playGotItSound()
+      if (newStreak > 0 && newStreak % 5 === 0) {
+        playCelebrationSound()
+        setShowCelebration(true)
+      }
+    }
+
     const next = index + 1
     if (next >= queue.length) {
       setPhase(S.DONE)
@@ -140,135 +201,207 @@ export default function Quiz() {
   if (phase === S.DONE) {
     const pct = Math.round((sessionResults.correct / queue.length) * 100)
     return (
-      <div className="page-scroll flex flex-col items-center justify-center min-h-full px-6 text-center">
-        <div className="animate-pop-in">
-          <div className="text-7xl mb-4">{pct >= 80 ? '🌟' : pct >= 50 ? '💪' : '📚'}</div>
-          <h2 className="text-2xl font-bold text-slate-900">Round Complete!</h2>
-          <p className="text-slate-500 mt-1">{queue.length} phonograms reviewed</p>
+      <>
+        {showCelebration && <StreakCelebration onDismiss={() => setShowCelebration(false)} />}
+        <div className="page-scroll flex flex-col items-center justify-center min-h-full px-6 text-center">
+          <div className="animate-pop-in">
+            <div className="text-7xl mb-4">{pct >= 80 ? '🌟' : pct >= 50 ? '💪' : '📚'}</div>
+            <h2 className="text-2xl font-bold text-slate-900">Round Complete!</h2>
+            <p className="text-slate-500 mt-1">{queue.length} phonograms reviewed</p>
 
-          <div className="mt-6 flex gap-4 justify-center">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-500">{sessionResults.correct}</div>
-              <div className="text-xs text-slate-500 mt-1">Got It</div>
+            <div className="mt-6 flex gap-4 justify-center">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-500">{sessionResults.correct}</div>
+                <div className="text-xs text-slate-500 mt-1">Got It</div>
+              </div>
+              <div className="w-px bg-slate-200" />
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-500">{sessionResults.incorrect}</div>
+                <div className="text-xs text-slate-500 mt-1">Keep Practicing</div>
+              </div>
+              <div className="w-px bg-slate-200" />
+              <div className="text-center">
+                <div className="text-3xl font-bold text-brand-500">{pct}%</div>
+                <div className="text-xs text-slate-500 mt-1">Score</div>
+              </div>
             </div>
-            <div className="w-px bg-slate-200" />
-            <div className="text-center">
-              <div className="text-3xl font-bold text-amber-500">{sessionResults.incorrect}</div>
-              <div className="text-xs text-slate-500 mt-1">Keep Practicing</div>
-            </div>
-            <div className="w-px bg-slate-200" />
-            <div className="text-center">
-              <div className="text-3xl font-bold text-brand-500">{pct}%</div>
-              <div className="text-xs text-slate-500 mt-1">Score</div>
-            </div>
-          </div>
 
-          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs mx-auto">
-            <button className="btn-primary" onClick={() => startQuiz('struggling')}>
-              Practice Again
-            </button>
-            <button className="btn-secondary" onClick={() => setPhase(S.IDLE)}>
-              Back to Menu
-            </button>
+            <div className="mt-8 flex flex-col gap-3 w-full max-w-xs mx-auto">
+              <button className="btn-primary" onClick={() => startQuiz('struggling')}>
+                Practice Again
+              </button>
+              <button className="btn-secondary" onClick={() => setPhase(S.IDLE)}>
+                Back to Menu
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     )
   }
 
   // ── QUESTION / REVEALED ────────────────────────────────────────────────────
   return (
-    <div className="page-scroll flex flex-col">
-      {/* Progress bar */}
-      <div className="px-4 pt-12 pb-4">
-        <div className="flex justify-between text-xs text-slate-400 mb-1.5">
-          <span>{index + 1} of {queue.length}</span>
-          <span>{sessionResults.correct} correct so far</span>
-        </div>
-        <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-brand-500 rounded-full transition-all duration-500"
-            style={{ width: `${((index) / queue.length) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Card */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
-        <div className="w-full max-w-sm">
+    <>
+      {showCelebration && <StreakCelebration onDismiss={() => setShowCelebration(false)} />}
+      <div className="page-scroll flex flex-col">
+        {/* Back button + Progress bar */}
+        <div className="px-4 pt-12 pb-4">
           <button
-            onClick={phase === S.QUESTION ? handleReveal : handlePlayAudio}
-            className={`card-base w-full flex flex-col items-center justify-center py-16 gap-4 relative overflow-hidden
-              ${playing ? 'border-brand-300 shadow-md shadow-brand-100' : ''}
-            `}
+            onClick={goToMenu}
+            className="flex items-center gap-1 text-sm text-slate-400 mb-3 -ml-1 active:opacity-60 transition-opacity"
           >
-            {/* Symbol */}
-            <span className="text-8xl font-bold text-slate-900 font-mono leading-none">
-              {currentPhonogram?.symbol}
-            </span>
-
-            {phase === S.QUESTION && (
-              <div className="flex flex-col items-center gap-1 text-slate-400">
-                <SoundIcon playing={playing} />
-                <span className="text-sm">{playing ? 'Listening...' : 'Tap to hear'}</span>
-              </div>
-            )}
-
-            {phase === S.REVEALED && (
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex flex-wrap justify-center gap-2">
-                  {currentPhonogram?.sounds.map((s, i) => (
-                    <span key={i} className="badge bg-brand-50 text-brand-700 text-base font-mono px-3 py-1">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-sm text-slate-500 text-center">
-                  {currentPhonogram?.examples.join(', ')}
-                </p>
-                {currentPhonogram?.notes && (
-                  <p className="text-xs text-slate-400 italic text-center px-4">
-                    {currentPhonogram.notes}
-                  </p>
-                )}
-                <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
-                  <SoundIcon playing={playing} small />
-                  <span>Tap to hear again</span>
-                </div>
-              </div>
-            )}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+            </svg>
+            <span>Menu</span>
           </button>
+          <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+            <span>{index + 1} of {queue.length}</span>
+            <span>{sessionResults.correct} correct so far</span>
+          </div>
+          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-brand-500 rounded-full transition-all duration-500"
+              style={{ width: `${((index) / queue.length) * 100}%` }}
+            />
+          </div>
         </div>
 
-        {/* Action buttons — only show after reveal */}
-        {phase === S.REVEALED && (
-          <div className="w-full max-w-sm flex gap-3 animate-slide-up">
+        {/* Card */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+          <div className="w-full max-w-sm">
             <button
-              onClick={() => handleResult(false)}
-              className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 font-semibold active:scale-95 transition-transform"
+              onClick={phase === S.QUESTION ? handleReveal : handlePlayAudio}
+              className={`card-base w-full flex flex-col items-center justify-center py-16 gap-4 relative overflow-hidden
+                ${playing ? 'border-brand-300 shadow-md shadow-brand-100' : ''}
+              `}
             >
-              <span className="text-2xl">🔁</span>
-              <span className="text-sm">Keep Practicing</span>
-            </button>
-            <button
-              onClick={() => handleResult(true)}
-              className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-green-50 border border-green-200 text-green-700 font-semibold active:scale-95 transition-transform"
-            >
-              <span className="text-2xl">✓</span>
-              <span className="text-sm">Got It!</span>
+              {/* Symbol */}
+              <span className="text-8xl font-bold text-slate-900 font-mono leading-none">
+                {currentPhonogram?.symbol}
+              </span>
+
+              {phase === S.QUESTION && (
+                <div className="flex flex-col items-center gap-1 text-slate-400">
+                  <SoundIcon playing={false} />
+                  <span className="text-sm">Tap to hear</span>
+                </div>
+              )}
+
+              {phase === S.REVEALED && (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {currentPhonogram?.sounds.map((s, i) => (
+                      <span key={i} className="badge bg-brand-50 text-brand-700 text-base font-mono px-3 py-1">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-slate-500 text-center">
+                    {currentPhonogram?.examples.join(', ')}
+                  </p>
+                  {currentPhonogram?.notes && (
+                    <p className="text-xs text-slate-400 italic text-center px-4">
+                      {currentPhonogram.notes}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
+                    <SoundIcon playing={playing} small />
+                    <span>Tap to hear again</span>
+                  </div>
+                </div>
+              )}
             </button>
           </div>
-        )}
 
-        {phase === S.QUESTION && (
-          <button
-            onClick={handleReveal}
-            className="btn-primary w-full max-w-sm"
-          >
-            Show Answer
-          </button>
-        )}
+          {/* Action buttons — only show after reveal */}
+          {phase === S.REVEALED && (
+            <div className="w-full max-w-sm flex gap-3 animate-slide-up">
+              <button
+                onClick={() => handleResult(false)}
+                className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 font-semibold active:scale-95 transition-transform"
+              >
+                <span className="text-2xl">🔁</span>
+                <span className="text-sm">Keep Practicing</span>
+              </button>
+              <button
+                onClick={() => handleResult(true)}
+                className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-green-50 border border-green-200 text-green-700 font-semibold active:scale-95 transition-transform"
+              >
+                <span className="text-2xl">✓</span>
+                <span className="text-sm">Got It!</span>
+              </button>
+            </div>
+          )}
+
+          {phase === S.QUESTION && (
+            <button
+              onClick={handleReveal}
+              className="btn-primary w-full max-w-sm"
+            >
+              Show Answer
+            </button>
+          )}
+        </div>
       </div>
+    </>
+  )
+}
+
+function StreakCelebration({ onDismiss }) {
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 2500)
+    return () => clearTimeout(timer)
+  }, [onDismiss])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      onClick={onDismiss}
+    >
+      <Confetti />
+      <div className="relative z-10 bg-white rounded-3xl shadow-2xl px-8 py-6 text-center animate-pop-in mx-4">
+        <div className="text-5xl mb-2">🎉</div>
+        <h2 className="text-xl font-bold text-slate-900">Great job!</h2>
+        <p className="text-slate-600 mt-1 text-lg font-semibold">5 in a row!</p>
+      </div>
+    </div>
+  )
+}
+
+function Confetti() {
+  const pieces = useMemo(() =>
+    Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 0.5}s`,
+      duration: `${0.9 + Math.random() * 1}s`,
+      color: ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#06b6d4'][i % 7],
+      size: `${6 + Math.floor(Math.random() * 10)}px`,
+    })),
+  [])
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {pieces.map(p => (
+        <div
+          key={p.id}
+          className="absolute rounded-sm"
+          style={{
+            left: p.left,
+            top: '-20px',
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            animationName: 'confetti-fall',
+            animationDuration: p.duration,
+            animationDelay: p.delay,
+            animationTimingFunction: 'linear',
+            animationFillMode: 'forwards',
+          }}
+        />
+      ))}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 const tabs = [
   {
-    to: '/browse',
+    to: '/sounds',
     label: 'Sounds',
     icon: (active) => (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'}

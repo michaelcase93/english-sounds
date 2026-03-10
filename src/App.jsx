@@ -25,8 +25,8 @@ function StudentLayout() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Navigate to="/browse" replace />} />
-        <Route path="/browse" element={<Browse />} />
+        <Route path="/" element={<Navigate to="/sounds" replace />} />
+        <Route path="/sounds" element={<Browse />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/progress" element={<Progress />} />
       </Routes>

@@ -328,6 +328,18 @@ export default function AudioRecord() {
   const [recorded, setRecorded] = useState(loadRecorded)
   const [selected, setSelected] = useState(null) // phonogram object
 
+  // #root has overflow:hidden to prevent pull-to-refresh on the student app.
+  // Admin pages need natural document scroll, so we lift that constraint here.
+  useEffect(() => {
+    const root = document.getElementById('root')
+    root.style.overflowY = 'auto'
+    root.style.height = 'auto'
+    return () => {
+      root.style.overflowY = ''
+      root.style.height = ''
+    }
+  }, [])
+
   function handleSaved(key) {
     const next = { ...recorded, [key]: true }
     setRecorded(next)

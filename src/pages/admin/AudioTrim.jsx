@@ -240,6 +240,18 @@ export default function AudioTrim() {
     localStorage.setItem('admin_clips', JSON.stringify(clips))
   }, [clips])
 
+  // #root has overflow:hidden to prevent pull-to-refresh on the student app.
+  // Admin pages need natural document scroll, so we lift that constraint here.
+  useEffect(() => {
+    const root = document.getElementById('root')
+    root.style.overflowY = 'auto'
+    root.style.height = 'auto'
+    return () => {
+      root.style.overflowY = ''
+      root.style.height = ''
+    }
+  }, [])
+
   // Load file → AudioContext + AudioBuffer for waveform
   async function handleFile(e) {
     const f = e.target.files?.[0]
