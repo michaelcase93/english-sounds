@@ -47,6 +47,20 @@ function getUiAudioCtx() {
   }
 }
 
+// iOS requires a silent buffer to be played during a user gesture to unlock
+// Web Audio for the session. Call this on the first tap (before Got It).
+function unlockUiAudio() {
+  try {
+    const ctx = getUiAudioCtx()
+    if (!ctx) return
+    const buf = ctx.createBuffer(1, 1, ctx.sampleRate)
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    src.connect(ctx.destination)
+    src.start(0)
+  } catch (e) {}
+}
+
 function playGotItSound() {
   try {
     const ctx = getUiAudioCtx()
@@ -154,6 +168,7 @@ export default function Quiz() {
 
   function handlePlayAudio() {
     if (!currentPhonogram) return
+    unlockUiAudio()
     const rulesMode = getRulesMode()
     const primarySrc = rulesMode
       ? `/audio/${currentPhonogram.id}_rule.wav`
