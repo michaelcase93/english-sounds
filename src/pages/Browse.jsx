@@ -3,6 +3,7 @@ import { PHONOGRAMS, GROUPS } from '../data/phonograms'
 import PhonogramButton from '../components/PhonogramButton'
 import { getRulesMode, setRulesMode } from '../utils/storage'
 import { useLanguage } from '../contexts/LanguageContext'
+import HamburgerMenu from '../components/HamburgerMenu'
 
 // Responsive card grid: cards grow from ~60px on mobile to ~110px on desktop
 const GRID_STYLE = {
@@ -12,7 +13,7 @@ const GRID_STYLE = {
 export default function Browse() {
   const [activeTab, setActiveTab] = useState('all')
   const [rulesMode, setRulesModeState] = useState(getRulesMode)
-  const { lang, toggleLanguage, t } = useLanguage()
+  const { t } = useLanguage()
 
   const TABS = [
     { id: 'all', label: t('tab_all') },
@@ -32,33 +33,13 @@ export default function Browse() {
   return (
     <div className="flex flex-col bg-white" style={{ height: '100dvh' }}>
 
-      {/* ── Page title + controls ── */}
+      {/* ── Page title ── */}
       <div className="flex-shrink-0 px-4 pt-12 pb-2 bg-white flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('page_sounds_title')}</h1>
-        <div className="flex items-center gap-3">
-          {/* Language toggle */}
-          <button
-            onClick={toggleLanguage}
-            className="text-xs font-bold text-slate-500 bg-slate-100 rounded-lg px-2.5 py-1.5 active:bg-slate-200 transition-colors"
-            aria-label="Toggle language"
-          >
-            {lang === 'en' ? 'ES' : 'EN'}
-          </button>
-          {/* Rules toggle */}
-          <button
-            onClick={toggleRulesMode}
-            className="flex items-center gap-2 text-sm font-medium text-slate-600"
-            aria-pressed={rulesMode}
-          >
-            <span className={rulesMode ? 'text-slate-800' : 'text-slate-400'}>{t('rules_toggle')}</span>
-            <div className={`relative w-10 h-6 rounded-full transition-colors ${rulesMode ? 'bg-brand-500' : 'bg-slate-200'}`}>
-              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${rulesMode ? 'translate-x-5' : 'translate-x-1'}`} />
-            </div>
-          </button>
-        </div>
+        <HamburgerMenu rulesMode={rulesMode} onToggleRules={toggleRulesMode} />
       </div>
 
-      {/* ── Tab bar (scrollable so all 4 fit on small screens) ── */}
+      {/* ── Tab bar ── */}
       <div className="flex-shrink-0 flex overflow-x-auto border-b border-slate-200 bg-white px-2 scrollbar-none" style={{ touchAction: 'pan-x' }}>
         {TABS.map(tab => (
           <button

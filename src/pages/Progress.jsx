@@ -3,6 +3,7 @@ import { useProgress } from '../hooks/useProgress'
 import { PHONOGRAMS } from '../data/phonograms'
 import { isMastered } from '../utils/storage'
 import { useLanguage } from '../contexts/LanguageContext'
+import HamburgerMenu from '../components/HamburgerMenu'
 
 export default function Progress() {
   const { progress, stats, reset } = useProgress()
@@ -19,8 +20,9 @@ export default function Progress() {
 
   return (
     <div className="page-scroll">
-      <div className="px-4 pt-12 pb-4">
+      <div className="px-4 pt-12 pb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('progress_title')}</h1>
+        <HamburgerMenu />
       </div>
 
       {/* Overview cards */}

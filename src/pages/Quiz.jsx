@@ -4,6 +4,7 @@ import { useProgress } from '../hooks/useProgress'
 import { isMastered, getRulesMode } from '../utils/storage'
 import { playAudio, stopCurrent } from '../utils/audioPlayer'
 import { useLanguage } from '../contexts/LanguageContext'
+import HamburgerMenu from '../components/HamburgerMenu'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -195,12 +196,15 @@ export default function Quiz() {
         <div className="px-4 pt-12 pb-3">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-slate-900">{t('quiz_title')}</h1>
-            {dailyStreak > 0 && (
-              <div className="flex items-center gap-1 text-sm font-semibold text-amber-500">
-                <span>🔥</span>
-                <span>{t('streak_days', dailyStreak)}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {dailyStreak > 0 && (
+                <div className="flex items-center gap-1 text-sm font-semibold text-amber-500">
+                  <span>🔥</span>
+                  <span>{t('streak_days', dailyStreak)}</span>
+                </div>
+              )}
+              <HamburgerMenu />
+            </div>
           </div>
           <p className="text-sm text-slate-500 mt-1">{t('quiz_subtitle')}</p>
         </div>

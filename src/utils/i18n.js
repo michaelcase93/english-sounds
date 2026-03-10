@@ -65,6 +65,7 @@ const TRANSLATIONS = {
     learning_label: 'Learning',
     not_yet_label: 'Not Yet',
     correct_label: 'correct',
+    language_label: 'Language',
   },
 
   es: {
@@ -126,6 +127,7 @@ const TRANSLATIONS = {
     learning_label: 'Aprendiendo',
     not_yet_label: 'Sin Empezar',
     correct_label: 'correcto',
+    language_label: 'Lenguaje',
   },
 }
 
