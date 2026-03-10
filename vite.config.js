@@ -9,10 +9,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Phonogram Practice',
-        short_name: 'Phonograms',
+        name: 'English Sounds',
+        short_name: 'English Sounds',
         description: 'Practice English phonograms using the Spalding method',
-        theme_color: '#4f46e5',
+        theme_color: '#1565C0',
         background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
