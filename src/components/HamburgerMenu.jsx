@@ -62,6 +62,23 @@ export default function HamburgerMenu({ rulesMode, onToggleRules }) {
               </>
             )}
 
+            {/* Feedback row */}
+            <div className="h-px bg-slate-100 mx-4" />
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSdLe1blRccBfcvEZOGFyztia1CzGGe-4oO-904fGDaN_NUJLQ/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 active:bg-slate-100 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+                className="w-5 h-5 text-slate-400 flex-shrink-0">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
+              <span className="text-sm font-medium text-slate-700">{t('feedback_label')}</span>
+            </a>
+
           </div>
         </>
       )}

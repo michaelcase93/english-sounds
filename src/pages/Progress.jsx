@@ -9,8 +9,7 @@ export default function Progress() {
   const { progress, stats, reset } = useProgress()
   const { t } = useLanguage()
   const [confirmReset, setConfirmReset] = useState(false)
-
-  const mastered   = PHONOGRAMS.filter(p => progress[p.id] && isMastered(progress[p.id]))
+const mastered   = PHONOGRAMS.filter(p => progress[p.id] && isMastered(progress[p.id]))
   const practicing = PHONOGRAMS.filter(p => progress[p.id] && !isMastered(progress[p.id]) && progress[p.id].attempts > 0)
   const notStarted = PHONOGRAMS.filter(p => !progress[p.id] || progress[p.id].attempts === 0)
 

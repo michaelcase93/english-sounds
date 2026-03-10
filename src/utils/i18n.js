@@ -66,6 +66,9 @@ const TRANSLATIONS = {
     not_yet_label: 'Not Yet',
     correct_label: 'correct',
     language_label: 'Language',
+    feedback_label: 'Share Feedback',
+    feedback_banner: 'How is the app working for you?',
+    feedback_link: 'Share feedback →',
   },
 
   es: {
@@ -128,6 +131,9 @@ const TRANSLATIONS = {
     not_yet_label: 'Sin Empezar',
     correct_label: 'correcto',
     language_label: 'Lenguaje',
+    feedback_label: 'Enviar Comentarios',
+    feedback_banner: '¿Cómo te funciona la app?',
+    feedback_link: 'Enviar comentario →',
   },
 }
 

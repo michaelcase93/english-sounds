@@ -5,6 +5,7 @@ import Progress from './pages/Progress'
 import AudioTrim from './pages/admin/AudioTrim'
 import AudioRecord from './pages/admin/AudioRecord'
 import BottomNav from './components/BottomNav'
+import FeedbackTab from './components/FeedbackTab'
 import { LanguageProvider } from './contexts/LanguageContext'
 
 export default function App() {
@@ -34,6 +35,7 @@ function StudentLayout() {
         <Route path="/progress" element={<Progress />} />
       </Routes>
       <BottomNav />
+      <FeedbackTab />
     </>
   )
 }
