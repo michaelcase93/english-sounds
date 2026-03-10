@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { PHONOGRAMS } from '../data/phonograms'
+import { PHONOGRAMS, GROUPS } from '../data/phonograms'
 import { useProgress } from '../hooks/useProgress'
 import { isMastered, getRulesMode } from '../utils/storage'
 import { playAudio, stopCurrent } from '../utils/audioPlayer'
@@ -59,7 +59,7 @@ function playCelebrationSound() {
 }
 
 export default function Quiz() {
-  const { progress, markResult, stats } = useProgress()
+  const { progress, markResult } = useProgress()
   const [phase, setPhase] = useState(S.IDLE)
   const [queue, setQueue] = useState([])
   const [index, setIndex] = useState(0)
@@ -67,23 +67,41 @@ export default function Quiz() {
   const [playing, setPlaying] = useState(false)
   const [streak, setStreak] = useState(0)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState('all')
+  const [openTip, setOpenTip] = useState(null)
+
+  // Stats scoped to the selected group
+  const groupPhonograms = selectedGroup === 'all'
+    ? PHONOGRAMS
+    : PHONOGRAMS.filter(p => p.group === selectedGroup)
+
+  const groupStats = {
+    total:      groupPhonograms.length,
+    mastered:   groupPhonograms.filter(p => isMastered(progress[p.id])).length,
+    practicing: groupPhonograms.filter(p => progress[p.id]?.attempts > 0 && !isMastered(progress[p.id])).length,
+    notStarted: groupPhonograms.filter(p => !progress[p.id] || progress[p.id].attempts === 0).length,
+    attempted:  groupPhonograms.filter(p => progress[p.id]?.attempts > 0).length,
+  }
 
   const buildQueue = useCallback((mode) => {
+    const base = selectedGroup === 'all'
+      ? PHONOGRAMS
+      : PHONOGRAMS.filter(p => p.group === selectedGroup)
     let pool
     if (mode === 'all') {
-      pool = PHONOGRAMS
+      pool = base
     } else if (mode === 'struggling') {
-      pool = PHONOGRAMS.filter(p => {
+      pool = base.filter(p => {
         const e = progress[p.id]
         return !e || !isMastered(e)
       })
-      if (pool.length === 0) pool = PHONOGRAMS
+      if (pool.length === 0) pool = base
     } else {
-      pool = PHONOGRAMS.filter(p => !progress[p.id] || progress[p.id].attempts === 0)
-      if (pool.length === 0) pool = PHONOGRAMS
+      pool = base.filter(p => !progress[p.id] || progress[p.id].attempts === 0)
+      if (pool.length === 0) pool = base
     }
     return shuffle(pool)
-  }, [progress])
+  }, [progress, selectedGroup])
 
   const currentPhonogram = queue[index]
 
@@ -155,44 +173,87 @@ export default function Quiz() {
 
   // ── IDLE screen ────────────────────────────────────────────────────────────
   if (phase === S.IDLE) {
+    const groupTabs = [{ id: 'all', label: 'All Sounds' }, ...GROUPS.map(g => ({ id: g.id, label: g.label }))]
     return (
       <div className="page-scroll flex flex-col">
-        <div className="px-4 pt-12 pb-4">
+        <div className="px-4 pt-12 pb-3">
           <h1 className="text-2xl font-bold text-slate-900">Quiz</h1>
-          <p className="text-slate-500 text-sm mt-1">Choose what to practice</p>
+          <p className="text-sm text-slate-500 mt-1">What do you want to practice?</p>
         </div>
 
-        <div className="px-4 flex flex-col gap-3 mt-2">
+        {/* Group tabs */}
+        <div className="flex overflow-x-auto border-b border-slate-200 px-2 scrollbar-none" style={{ touchAction: 'pan-x' }}>
+          {groupTabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedGroup(tab.id)}
+              className={`
+                flex-shrink-0 px-3 py-3 text-sm font-semibold tracking-tight transition-colors
+                border-b-2 -mb-px whitespace-nowrap
+                ${selectedGroup === tab.id
+                  ? 'border-slate-800 text-slate-900'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'}
+              `}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="px-4 flex flex-col gap-3 mt-4">
           <QuizModeCard
             title="All Phonograms"
-            description={`Practice all ${stats.total} phonograms in random order`}
+            description={`Practice all ${groupStats.total} phonograms in random order`}
             icon="✦"
             color="brand"
             onClick={() => startQuiz('all')}
           />
           <QuizModeCard
             title="Still Learning"
-            description={`Focus on the ${stats.total - stats.mastered} phonograms you haven't mastered yet`}
+            description={`Focus on the ${groupStats.total - groupStats.mastered} phonograms you haven't mastered yet`}
             icon="⟳"
             color="amber"
             onClick={() => startQuiz('struggling')}
           />
           <QuizModeCard
             title="New Only"
-            description={`Start fresh with ${stats.notStarted} phonograms you haven't tried`}
+            description={`Start fresh with ${groupStats.notStarted} phonograms you haven't tried`}
             icon="★"
             color="green"
             onClick={() => startQuiz('new')}
           />
         </div>
 
-        {stats.attempted > 0 && (
-          <div className="px-4 mt-6">
-            <p className="text-xs text-slate-400 text-center">
-              {stats.mastered} mastered · {stats.practicing} practicing · {stats.notStarted} not started
-            </p>
-          </div>
-        )}
+        <div className="px-4 mt-6 flex justify-around text-center">
+          {[
+            { key: 'mastered',   count: groupStats.mastered,   label: 'Mastered',     tip: 'Got it right 80%+ of the time with at least 5 attempts' },
+            { key: 'practicing', count: groupStats.practicing, label: 'Practicing',   tip: 'Tried at least once but not yet mastered' },
+            { key: 'notStarted', count: groupStats.notStarted, label: 'Not Started',  tip: 'Never attempted' },
+          ].map(({ key, count, label, tip }) => (
+            <div key={key} className="relative">
+              <div className="text-2xl font-bold text-slate-900">{count}</div>
+              <div className="flex items-center justify-center gap-1 mt-0.5">
+                <span className="text-xs text-slate-500">{label}</span>
+                <button
+                  onClick={() => setOpenTip(openTip === key ? null : key)}
+                  className="text-slate-300 active:text-slate-500 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              {openTip === key && (
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs rounded-xl px-3 py-2 w-44 z-20 shadow-lg leading-relaxed">
+                  {tip}
+                  <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden">
+                    <div className="w-2 h-2 bg-slate-800 rotate-45 mx-auto -mt-1" />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -231,7 +292,7 @@ export default function Quiz() {
                 Practice Again
               </button>
               <button className="btn-secondary" onClick={() => setPhase(S.IDLE)}>
-                Back to Menu
+                Back
               </button>
             </div>
           </div>
@@ -254,7 +315,7 @@ export default function Quiz() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
             </svg>
-            <span>Menu</span>
+            <span>Back</span>
           </button>
           <div className="flex justify-between text-xs text-slate-400 mb-1.5">
             <span>{index + 1} of {queue.length}</span>
@@ -278,7 +339,7 @@ export default function Quiz() {
               `}
             >
               {/* Symbol */}
-              <span className="text-8xl font-bold text-slate-900 font-mono leading-none">
+              <span className="text-8xl font-bold text-slate-900 leading-none">
                 {currentPhonogram?.symbol}
               </span>
 
