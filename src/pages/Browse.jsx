@@ -2,11 +2,7 @@ import { useState } from 'react'
 import { PHONOGRAMS, GROUPS } from '../data/phonograms'
 import PhonogramButton from '../components/PhonogramButton'
 import { getRulesMode, setRulesMode } from '../utils/storage'
-
-const TABS = [
-  { id: 'all', label: 'All Sounds' },
-  ...GROUPS.map(g => ({ id: g.id, label: g.label })),
-]
+import { useLanguage } from '../contexts/LanguageContext'
 
 // Responsive card grid: cards grow from ~60px on mobile to ~110px on desktop
 const GRID_STYLE = {
@@ -16,6 +12,12 @@ const GRID_STYLE = {
 export default function Browse() {
   const [activeTab, setActiveTab] = useState('all')
   const [rulesMode, setRulesModeState] = useState(getRulesMode)
+  const { lang, toggleLanguage, t } = useLanguage()
+
+  const TABS = [
+    { id: 'all', label: t('tab_all') },
+    ...GROUPS.map(g => ({ id: g.id, label: t(g.id) })),
+  ]
 
   function toggleRulesMode() {
     const next = !rulesMode
@@ -30,19 +32,30 @@ export default function Browse() {
   return (
     <div className="flex flex-col bg-white" style={{ height: '100dvh' }}>
 
-      {/* ── Page title + rules toggle ── */}
+      {/* ── Page title + controls ── */}
       <div className="flex-shrink-0 px-4 pt-12 pb-2 bg-white flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Phonogram Sounds</h1>
-        <button
-          onClick={toggleRulesMode}
-          className="flex items-center gap-2 text-sm font-medium text-slate-600"
-          aria-pressed={rulesMode}
-        >
-          <span className={rulesMode ? 'text-slate-800' : 'text-slate-400'}>Rules</span>
-          <div className={`relative w-10 h-6 rounded-full transition-colors ${rulesMode ? 'bg-brand-500' : 'bg-slate-200'}`}>
-            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${rulesMode ? 'translate-x-5' : 'translate-x-1'}`} />
-          </div>
-        </button>
+        <h1 className="text-2xl font-bold text-slate-900">{t('page_sounds_title')}</h1>
+        <div className="flex items-center gap-3">
+          {/* Language toggle */}
+          <button
+            onClick={toggleLanguage}
+            className="text-xs font-bold text-slate-500 bg-slate-100 rounded-lg px-2.5 py-1.5 active:bg-slate-200 transition-colors"
+            aria-label="Toggle language"
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
+          {/* Rules toggle */}
+          <button
+            onClick={toggleRulesMode}
+            className="flex items-center gap-2 text-sm font-medium text-slate-600"
+            aria-pressed={rulesMode}
+          >
+            <span className={rulesMode ? 'text-slate-800' : 'text-slate-400'}>{t('rules_toggle')}</span>
+            <div className={`relative w-10 h-6 rounded-full transition-colors ${rulesMode ? 'bg-brand-500' : 'bg-slate-200'}`}>
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${rulesMode ? 'translate-x-5' : 'translate-x-1'}`} />
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* ── Tab bar (scrollable so all 4 fit on small screens) ── */}
@@ -73,7 +86,7 @@ export default function Browse() {
             <div key={group.id} className={i > 0 ? 'mt-7' : ''}>
               {activeTab === 'all' && (
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2.5">
-                  {group.label}
+                  {t(group.id)}
                 </p>
               )}
               <div className="grid gap-2.5" style={GRID_STYLE}>

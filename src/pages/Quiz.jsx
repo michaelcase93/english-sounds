@@ -3,6 +3,7 @@ import { PHONOGRAMS, GROUPS } from '../data/phonograms'
 import { useProgress } from '../hooks/useProgress'
 import { isMastered, getRulesMode } from '../utils/storage'
 import { playAudio, stopCurrent } from '../utils/audioPlayer'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -11,6 +12,17 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+// Lower score = higher priority (worst accuracy + least recently practiced)
+function priorityScore(p, progress) {
+  const e = progress[p.id]
+  if (!e || e.attempts === 0) return -30 + Math.random() * 5
+  const acc = e.correct / e.attempts
+  const daysSince = e.lastPracticed
+    ? (Date.now() - new Date(e.lastPracticed)) / 86400000
+    : 999
+  return acc * 100 - Math.min(daysSince, 30) + Math.random() * 5
 }
 
 // Quiz states
@@ -59,11 +71,12 @@ function playCelebrationSound() {
 }
 
 export default function Quiz() {
-  const { progress, markResult } = useProgress()
+  const { progress, markResult, dailyStreak } = useProgress()
+  const { t } = useLanguage()
   const [phase, setPhase] = useState(S.IDLE)
   const [queue, setQueue] = useState([])
   const [index, setIndex] = useState(0)
-  const [sessionResults, setSessionResults] = useState({ correct: 0, incorrect: 0 })
+  const [sessionResults, setSessionResults] = useState({ correct: 0, incorrect: 0, wrongIds: [] })
   const [playing, setPlaying] = useState(false)
   const [streak, setStreak] = useState(0)
   const [showCelebration, setShowCelebration] = useState(false)
@@ -89,18 +102,20 @@ export default function Quiz() {
       : PHONOGRAMS.filter(p => p.group === selectedGroup)
     let pool
     if (mode === 'all') {
-      pool = base
+      pool = shuffle(base)
     } else if (mode === 'struggling') {
       pool = base.filter(p => {
         const e = progress[p.id]
         return !e || !isMastered(e)
       })
       if (pool.length === 0) pool = base
+      // SRS: sort by priority score (lowest = highest priority)
+      pool = [...pool].sort((a, b) => priorityScore(a, progress) - priorityScore(b, progress))
     } else {
-      pool = base.filter(p => !progress[p.id] || progress[p.id].attempts === 0)
-      if (pool.length === 0) pool = base
+      pool = shuffle(base.filter(p => !progress[p.id] || progress[p.id].attempts === 0))
+      if (pool.length === 0) pool = shuffle(base)
     }
-    return shuffle(pool)
+    return pool
   }, [progress, selectedGroup])
 
   const currentPhonogram = queue[index]
@@ -109,7 +124,7 @@ export default function Quiz() {
     const q = buildQueue(mode)
     setQueue(q)
     setIndex(0)
-    setSessionResults({ correct: 0, incorrect: 0 })
+    setSessionResults({ correct: 0, incorrect: 0, wrongIds: [] })
     setStreak(0)
     setPlaying(false)
     setPhase(S.QUESTION)
@@ -149,6 +164,7 @@ export default function Quiz() {
     setSessionResults(prev => ({
       correct: prev.correct + (wasCorrect ? 1 : 0),
       incorrect: prev.incorrect + (wasCorrect ? 0 : 1),
+      wrongIds: wasCorrect ? prev.wrongIds : [...prev.wrongIds, currentPhonogram.id],
     }))
 
     const newStreak = wasCorrect ? streak + 1 : 0
@@ -173,12 +189,20 @@ export default function Quiz() {
 
   // ── IDLE screen ────────────────────────────────────────────────────────────
   if (phase === S.IDLE) {
-    const groupTabs = [{ id: 'all', label: 'All Sounds' }, ...GROUPS.map(g => ({ id: g.id, label: g.label }))]
+    const groupTabs = [{ id: 'all', label: t('tab_all') }, ...GROUPS.map(g => ({ id: g.id, label: t(g.id) }))]
     return (
       <div className="page-scroll flex flex-col">
         <div className="px-4 pt-12 pb-3">
-          <h1 className="text-2xl font-bold text-slate-900">Quiz</h1>
-          <p className="text-sm text-slate-500 mt-1">What do you want to practice?</p>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-slate-900">{t('quiz_title')}</h1>
+            {dailyStreak > 0 && (
+              <div className="flex items-center gap-1 text-sm font-semibold text-amber-500">
+                <span>🔥</span>
+                <span>{t('streak_days', dailyStreak)}</span>
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-slate-500 mt-1">{t('quiz_subtitle')}</p>
         </div>
 
         {/* Group tabs */}
@@ -202,22 +226,22 @@ export default function Quiz() {
 
         <div className="px-4 flex flex-col gap-3 mt-4">
           <QuizModeCard
-            title="All Phonograms"
-            description={`Practice all ${groupStats.total} phonograms in random order`}
+            title={t('mode_all_title')}
+            description={t('mode_all_desc', groupStats.total)}
             icon="✦"
             color="brand"
             onClick={() => startQuiz('all')}
           />
           <QuizModeCard
-            title="Still Learning"
-            description={`Focus on the ${groupStats.total - groupStats.mastered} phonograms you haven't mastered yet`}
+            title={t('mode_struggling_title')}
+            description={t('mode_struggling_desc', groupStats.total - groupStats.mastered)}
             icon="⟳"
             color="amber"
             onClick={() => startQuiz('struggling')}
           />
           <QuizModeCard
-            title="New Only"
-            description={`Start fresh with ${groupStats.notStarted} phonograms you haven't tried`}
+            title={t('mode_new_title')}
+            description={t('mode_new_desc', groupStats.notStarted)}
             icon="★"
             color="green"
             onClick={() => startQuiz('new')}
@@ -226,9 +250,9 @@ export default function Quiz() {
 
         <div className="px-4 mt-6 flex justify-around text-center">
           {[
-            { key: 'mastered',   count: groupStats.mastered,   label: 'Mastered',     tip: 'Got it right 80%+ of the time with at least 5 attempts' },
-            { key: 'practicing', count: groupStats.practicing, label: 'Practicing',   tip: 'Tried at least once but not yet mastered' },
-            { key: 'notStarted', count: groupStats.notStarted, label: 'Not Started',  tip: 'Never attempted' },
+            { key: 'mastered',   count: groupStats.mastered,   label: t('stat_mastered'),   tip: t('tip_mastered') },
+            { key: 'practicing', count: groupStats.practicing, label: t('stat_practicing'), tip: t('tip_practicing') },
+            { key: 'notStarted', count: groupStats.notStarted, label: t('stat_not_started'), tip: t('tip_not_started') },
           ].map(({ key, count, label, tip }) => (
             <div key={key} className="relative">
               <div className="text-2xl font-bold text-slate-900">{count}</div>
@@ -261,24 +285,25 @@ export default function Quiz() {
   // ── DONE screen ────────────────────────────────────────────────────────────
   if (phase === S.DONE) {
     const pct = Math.round((sessionResults.correct / queue.length) * 100)
+    const wrongPhonograms = PHONOGRAMS.filter(p => sessionResults.wrongIds.includes(p.id))
     return (
       <>
         {showCelebration && <StreakCelebration onDismiss={() => setShowCelebration(false)} />}
         <div className="page-scroll flex flex-col items-center justify-center min-h-full px-6 text-center">
-          <div className="animate-pop-in">
+          <div className="animate-pop-in w-full max-w-xs mx-auto">
             <div className="text-7xl mb-4">{pct >= 80 ? '🌟' : pct >= 50 ? '💪' : '📚'}</div>
-            <h2 className="text-2xl font-bold text-slate-900">Round Complete!</h2>
-            <p className="text-slate-500 mt-1">{queue.length} phonograms reviewed</p>
+            <h2 className="text-2xl font-bold text-slate-900">{t('round_complete')}</h2>
+            <p className="text-slate-500 mt-1">{t('phonograms_reviewed', queue.length)}</p>
 
             <div className="mt-6 flex gap-4 justify-center">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-500">{sessionResults.correct}</div>
-                <div className="text-xs text-slate-500 mt-1">Got It</div>
+                <div className="text-xs text-slate-500 mt-1">{t('got_it')}</div>
               </div>
               <div className="w-px bg-slate-200" />
               <div className="text-center">
                 <div className="text-3xl font-bold text-amber-500">{sessionResults.incorrect}</div>
-                <div className="text-xs text-slate-500 mt-1">Keep Practicing</div>
+                <div className="text-xs text-slate-500 mt-1">{t('keep_practicing')}</div>
               </div>
               <div className="w-px bg-slate-200" />
               <div className="text-center">
@@ -287,12 +312,28 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 w-full max-w-xs mx-auto">
+            {wrongPhonograms.length > 0 && (
+              <div className="mt-6 text-left">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">{t('review_label')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {wrongPhonograms.map(p => (
+                    <div
+                      key={p.id}
+                      className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-amber-200 bg-amber-50 font-bold text-amber-700 text-sm"
+                    >
+                      {p.symbol}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 flex flex-col gap-3 w-full">
               <button className="btn-primary" onClick={() => startQuiz('struggling')}>
-                Practice Again
+                {t('practice_again')}
               </button>
               <button className="btn-secondary" onClick={() => setPhase(S.IDLE)}>
-                Back
+                {t('back')}
               </button>
             </div>
           </div>
@@ -315,11 +356,11 @@ export default function Quiz() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
             </svg>
-            <span>Back</span>
+            <span>{t('back')}</span>
           </button>
           <div className="flex justify-between text-xs text-slate-400 mb-1.5">
-            <span>{index + 1} of {queue.length}</span>
-            <span>{sessionResults.correct} correct so far</span>
+            <span>{t('of_label', index + 1, queue.length)}</span>
+            <span>{t('correct_so_far', sessionResults.correct)}</span>
           </div>
           <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
             <div
@@ -346,7 +387,7 @@ export default function Quiz() {
               {phase === S.QUESTION && (
                 <div className="flex flex-col items-center gap-1 text-slate-400">
                   <SoundIcon playing={false} />
-                  <span className="text-sm">Tap to hear</span>
+                  <span className="text-sm">{t('tap_to_hear')}</span>
                 </div>
               )}
 
@@ -369,7 +410,7 @@ export default function Quiz() {
                   )}
                   <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
                     <SoundIcon playing={playing} small />
-                    <span>Tap to hear again</span>
+                    <span>{t('tap_to_hear_again')}</span>
                   </div>
                 </div>
               )}
@@ -384,14 +425,14 @@ export default function Quiz() {
                 className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 font-semibold active:scale-95 transition-transform"
               >
                 <span className="text-2xl">🔁</span>
-                <span className="text-sm">Keep Practicing</span>
+                <span className="text-sm">{t('keep_practicing')}</span>
               </button>
               <button
                 onClick={() => handleResult(true)}
                 className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-green-50 border border-green-200 text-green-700 font-semibold active:scale-95 transition-transform"
               >
                 <span className="text-2xl">✓</span>
-                <span className="text-sm">Got It!</span>
+                <span className="text-sm">{t('got_it')}</span>
               </button>
             </div>
           )}
@@ -401,7 +442,7 @@ export default function Quiz() {
               onClick={handleReveal}
               className="btn-primary w-full max-w-sm"
             >
-              Show Answer
+              {t('show_answer')}
             </button>
           )}
         </div>

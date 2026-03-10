@@ -1,5 +1,6 @@
 const PROGRESS_KEY = 'phonogram_progress'
 const RULES_MODE_KEY = 'phonogram_rules_mode'
+const STREAK_KEY = 'phonogram_streak'
 
 export function getRulesMode() {
   return localStorage.getItem(RULES_MODE_KEY) === 'true'
@@ -35,6 +36,26 @@ export function clearProgress() {
 export function isMastered(entry) {
   if (!entry || entry.attempts < 5) return false
   return entry.correct / entry.attempts >= 0.8
+}
+
+// Daily streak helpers
+export function getDailyStreak() {
+  try {
+    const raw = localStorage.getItem(STREAK_KEY)
+    return raw ? JSON.parse(raw) : { streak: 0, lastDate: null }
+  } catch {
+    return { streak: 0, lastDate: null }
+  }
+}
+
+export function updateDailyStreak() {
+  const today = new Date().toISOString().split('T')[0]
+  const { streak, lastDate } = getDailyStreak()
+  if (lastDate === today) return streak
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+  const newStreak = lastDate === yesterday ? streak + 1 : 1
+  localStorage.setItem(STREAK_KEY, JSON.stringify({ streak: newStreak, lastDate: today }))
+  return newStreak
 }
 
 // Record a quiz result for one phonogram

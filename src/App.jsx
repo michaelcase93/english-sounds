@@ -5,9 +5,11 @@ import Progress from './pages/Progress'
 import AudioTrim from './pages/admin/AudioTrim'
 import AudioRecord from './pages/admin/AudioRecord'
 import BottomNav from './components/BottomNav'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 export default function App() {
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <Routes>
         {/* Admin tools — no nav bar */}
@@ -18,6 +20,7 @@ export default function App() {
         <Route path="/*" element={<StudentLayout />} />
       </Routes>
     </BrowserRouter>
+    </LanguageProvider>
   )
 }
 

@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
+import { useLanguage } from '../contexts/LanguageContext'
 
-const tabs = [
+const TABS = [
   {
     to: '/sounds',
-    label: 'Sounds',
+    labelKey: 'nav_sounds',
     icon: (active) => (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'}
         stroke="currentColor" strokeWidth={active ? 0 : 1.8} className="w-6 h-6">
@@ -14,7 +15,7 @@ const tabs = [
   },
   {
     to: '/quiz',
-    label: 'Quiz',
+    labelKey: 'nav_quiz',
     icon: (active) => (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'}
         stroke="currentColor" strokeWidth={active ? 0 : 1.8} className="w-6 h-6">
@@ -25,7 +26,7 @@ const tabs = [
   },
   {
     to: '/progress',
-    label: 'Progress',
+    labelKey: 'nav_progress',
     icon: (active) => (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'}
         stroke="currentColor" strokeWidth={active ? 0 : 1.8} className="w-6 h-6">
@@ -37,13 +38,14 @@ const tabs = [
 ]
 
 export default function BottomNav() {
+  const { t } = useLanguage()
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-10"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex">
-        {tabs.map(tab => (
+        {TABS.map(tab => (
           <NavLink
             key={tab.to}
             to={tab.to}
@@ -56,7 +58,7 @@ export default function BottomNav() {
             {({ isActive }) => (
               <>
                 {tab.icon(isActive)}
-                <span>{tab.label}</span>
+                <span>{t(tab.labelKey)}</span>
               </>
             )}
           </NavLink>
