@@ -34,9 +34,23 @@ const S = {
   DONE:      'done',
 }
 
+let _uiAudioCtx = null
+function getUiAudioCtx() {
+  try {
+    if (!_uiAudioCtx || _uiAudioCtx.state === 'closed') {
+      _uiAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    }
+    if (_uiAudioCtx.state === 'suspended') _uiAudioCtx.resume()
+    return _uiAudioCtx
+  } catch (e) {
+    return null
+  }
+}
+
 function playGotItSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const ctx = getUiAudioCtx()
+    if (!ctx) return
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
@@ -53,7 +67,8 @@ function playGotItSound() {
 
 function playCelebrationSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const ctx = getUiAudioCtx()
+    if (!ctx) return
     const notes = [523, 659, 784, 1047] // C5 E5 G5 C6
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
