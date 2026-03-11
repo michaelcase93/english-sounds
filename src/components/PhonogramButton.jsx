@@ -3,11 +3,11 @@ import { playAudio } from '../utils/audioPlayer'
 
 // ── Color palette ─────────────────────────────────────────────────────────────
 const COLORS = {
-  red:    { base: '#B45309', active: '#92400E' }, // group2 common sounds — dark amber (WCAG AA)
-  green:  { base: '#2E7D32', active: '#1B5E20' }, // group1 vowels — Spalding tradition
-  blue:   { base: '#1565C0', active: '#0D47A1' }, // group1 consonants — calm, foundational
-  purple: { base: '#6D28D9', active: '#5B21B6' }, // group3 — advanced, higher-order
-  orange: { base: '#0F766E', active: '#115E59' }, // group4 — teal, colorblind-safe
+  blue:   { base: '#1565C0', active: '#0D47A1' }, // group1 consonants — Spalding blue
+  green:  { base: '#2E7D32', active: '#1B5E20' }, // group1 vowels — Spalding green
+  red:    { base: '#C2410C', active: '#9A3412' }, // group2 common sounds — warm orange-red
+  purple: { base: '#6D28D9', active: '#5B21B6' }, // group3 advanced — purple (feels like level-up)
+  orange: { base: '#0E7490', active: '#0C6478' }, // group4 additional — dark cyan (calm, distinct)
 }
 
 // Vowels in the alphabet get green; y gets a diagonal split
