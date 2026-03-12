@@ -39,7 +39,8 @@
       "Bash(git add src/utils/i18n.js && git commit -m \"$\\(cat <<'EOF'\nFix Progress empty state: 'Browse' → 'Sounds'\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push)",
       "Bash(npm install:*)",
       "Bash(git add:*)",
-      "Bash(node -e \"const p = require\\('./src/data/phonograms.js'\\); const all = Object.values\\(p\\).flat ? Object.values\\(p\\).flat\\(\\) : p; console.log\\(JSON.stringify\\(all.map\\(x => x.id\\).sort\\(\\), null, 2\\)\\)\" 2>/dev/null || node -e \"import\\('./src/data/phonograms.js'\\).then\\(m => { const data = m.default || m; const ids = Array.isArray\\(data\\) ? data.map\\(x=>x.id\\) : Object.values\\(data\\).flat\\(\\).map\\(x=>x.id\\); console.log\\(ids.sort\\(\\).join\\('\\\\n'\\)\\); }\\)\" 2>/dev/null)"
+      "Bash(node -e \"const p = require\\('./src/data/phonograms.js'\\); const all = Object.values\\(p\\).flat ? Object.values\\(p\\).flat\\(\\) : p; console.log\\(JSON.stringify\\(all.map\\(x => x.id\\).sort\\(\\), null, 2\\)\\)\" 2>/dev/null || node -e \"import\\('./src/data/phonograms.js'\\).then\\(m => { const data = m.default || m; const ids = Array.isArray\\(data\\) ? data.map\\(x=>x.id\\) : Object.values\\(data\\).flat\\(\\).map\\(x=>x.id\\); console.log\\(ids.sort\\(\\).join\\('\\\\n'\\)\\); }\\)\" 2>/dev/null)",
+      "Bash(git commit:*)"
     ]
   }
 }
