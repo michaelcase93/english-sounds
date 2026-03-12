@@ -183,11 +183,13 @@ export default function Quiz() {
   }
 
   function handleReveal() {
+    navigator.vibrate?.(30)
     handlePlayAudio()
     setPhase(S.REVEALED)
   }
 
   function handleResult(wasCorrect) {
+    navigator.vibrate?.(wasCorrect ? [20, 40, 20] : 15)
     stopCurrent()
     setPlaying(false)
 

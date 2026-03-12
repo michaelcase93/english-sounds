@@ -55,6 +55,7 @@ export default function PhonogramButton({ phonogram, rulesMode = false, onTap })
   function handleTap() {
     setPressed(true)
     setTimeout(() => setPressed(false), 180)
+    navigator.vibrate?.(30)
 
     const primarySrc = rulesMode ? `/audio/${phonogram.id}_rule.wav` : `/audio/${phonogram.id}.wav`
     const fallbackSrc = `/audio/${phonogram.id}.wav`
