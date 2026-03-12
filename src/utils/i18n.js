@@ -140,7 +140,10 @@ const TRANSLATIONS = {
 const LANG_KEY = 'phonogram_language'
 
 export function getStoredLanguage() {
-  return localStorage.getItem(LANG_KEY) || 'en'
+  const stored = localStorage.getItem(LANG_KEY)
+  if (stored) return stored
+  // First visit: detect from device/browser language setting
+  return navigator.language?.startsWith('es') ? 'es' : 'en'
 }
 
 export function setStoredLanguage(lang) {
