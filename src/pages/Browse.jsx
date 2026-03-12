@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { PHONOGRAMS, GROUPS } from '../data/phonograms'
 import PhonogramButton from '../components/PhonogramButton'
 import { getRulesMode, setRulesMode } from '../utils/storage'
@@ -13,7 +13,13 @@ const GRID_STYLE = {
 export default function Browse() {
   const [activeTab, setActiveTab] = useState('all')
   const [rulesMode, setRulesModeState] = useState(getRulesMode)
+  const [showHint, setShowHint] = useState(() => !localStorage.getItem('hint_sounds_dismissed'))
   const { t } = useLanguage()
+
+  const dismissHint = useCallback(() => {
+    setShowHint(false)
+    localStorage.setItem('hint_sounds_dismissed', '1')
+  }, [])
 
   const TABS = [
     { id: 'all', label: t('tab_all') },
@@ -58,6 +64,14 @@ export default function Browse() {
         ))}
       </div>
 
+      {/* ── First-visit hint ── */}
+      {showHint && (
+        <div className="flex-shrink-0 flex items-center justify-between gap-2 mx-4 mt-3 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span className="text-sm text-slate-500">👆 {t('hint_sounds')}</span>
+          <button onClick={dismissHint} className="text-slate-300 hover:text-slate-500 text-lg leading-none">✕</button>
+        </div>
+      )}
+
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto px-4 py-4" style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom) + env(safe-area-inset-top))' }}>
 
@@ -72,7 +86,7 @@ export default function Browse() {
               )}
               <div className="grid gap-2.5" style={GRID_STYLE}>
                 {phonograms.map(p => (
-                  <PhonogramButton key={p.id} phonogram={p} rulesMode={rulesMode} />
+                  <PhonogramButton key={p.id} phonogram={p} rulesMode={rulesMode} onTap={showHint ? dismissHint : undefined} />
                 ))}
               </div>
             </div>
