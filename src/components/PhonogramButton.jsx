@@ -10,6 +10,13 @@ const COLORS = {
   orange: { base: '#B8302A', active: '#8F251F' }, // group4 additional
 }
 
+// Phonograms that have a _rule.wav audio file
+const RULE_IDS = new Set([
+  'ai','au','aw','ay','ci','ck','dge','ear','ed','ee','eigh','er','ew','ey',
+  'gn','gu','igh','ir','kn','oa','oe','oi','oo','ow','oy','ph','qu','ti','ui',
+  'ur','wor','wr',
+])
+
 // Vowels in the alphabet get green; y gets a diagonal split
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u'])
 
@@ -86,6 +93,22 @@ export default function PhonogramButton({ phonogram, rulesMode = false, onTap })
       <span style={symStyle(phonogram.symbol)} className="leading-none drop-shadow-sm">
         {phonogram.symbol}
       </span>
+      {rulesMode && RULE_IDS.has(phonogram.id) && (
+        <span
+          style={{
+            position: 'absolute',
+            bottom: '4px',
+            right: '5px',
+            fontSize: '0.8rem',
+            opacity: 0.85,
+            lineHeight: 1,
+            pointerEvents: 'none',
+            color: 'white',
+          }}
+        >
+          ★
+        </span>
+      )}
     </button>
   )
 }
